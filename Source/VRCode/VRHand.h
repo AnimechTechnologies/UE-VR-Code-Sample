@@ -143,4 +143,9 @@ public:
 
 	void SetupRoomScaleOutline();
 	void UpdateRoomScaleOutline();
+
+	void HandleTeleportationArc();
+	void ClearArc();
+	void UpdateArcSpline(bool FoundValidLocation, TArray<FVector> SplinePoints);
+	void UpdateArcEndpoint(FVector NewLocation, bool ValidLocationFound);
 };
