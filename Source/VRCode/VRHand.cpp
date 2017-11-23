@@ -222,108 +222,7 @@ void AVRHand::Tick( float DeltaTime )
 
 	UpdateAnimationGripState();
 
-	if ( IsTeleporterActive )
-	{
-		TArray<FVector> TracePoints;
-		FVector NavLocation;
-		FVector HitLocation;
-		bool IsValidTeleportDestination = TraceTeleportDestination( TracePoints, NavLocation, HitLocation );
-
-		TeleportCylinder->SetVisibility( IsValidTeleportDestination, true );
-
-		if ( IsValidTeleportDestination )
-		{
-			// Find Floor at Teleport Location and Move Cylinder
-			FHitResult OutHit;
-			{
-				FVector EndPos = NavLocation + FVector( 0, 0, -200 );
-				FCollisionQueryParams CollisionQueryParams( FName( TEXT( "TeleporterDrop" ) ), false, this );
-				GetWorld()->LineTraceSingleByChannel( OutHit, NavLocation, EndPos, ECC_WorldStatic, CollisionQueryParams );
-			}
-
-			FVector TeleportCylinderLocation;
-			if ( OutHit.bBlockingHit )
-				TeleportCylinderLocation = OutHit.ImpactPoint;
-			else
-				TeleportCylinderLocation = NavLocation;
-
-			TeleportCylinder->SetWorldLocation( TeleportCylinderLocation, false, nullptr, ETeleportType::TeleportPhysics );
-
-			ArcEndPoint->SetVisibility( true );
-			ArcEndPoint->SetWorldLocation( HitLocation, false, nullptr, ETeleportType::TeleportPhysics );
-
-			// Rotate Arrow
-			FRotator ArrowRotator = TeleportRotator;
-
- 			IHeadMountedDisplay *hmd = GEngine->HMDDevice.Get();
-			if ( hmd )
-			{
-				FRotator DeviceRotation;
-				FVector DevicePosition;
-				UHeadMountedDisplayFunctionLibrary::GetOrientationAndPosition( DeviceRotation, DevicePosition );
-
-				DeviceRotation.Pitch = 0;
-				DeviceRotation.Roll = 0;
-
-				ArrowRotator = UKismetMathLibrary::ComposeRotators( TeleportRotator, DeviceRotation );
-			}
-
-			TeleportArrow->SetWorldRotation( ArrowRotator );
-			
-			// Make Spline....
-			if ( TracePoints.Num() > 0 )
-			{
-				ArcSpline->ClearSplinePoints();
-				for ( FVector TracePoint : TracePoints )
-				{
-					ArcSpline->AddSplinePoint( TracePoint, ESplineCoordinateSpace::Local, true );
-				}
-				ArcSpline->SetSplinePointType( TracePoints.Num() - 1, ESplinePointType::CurveClamped, true );
-
-				for ( int i = 0; i < TracePoints.Num() - 2; i++ )
-				{
-					FVector StartPos = TracePoints[i];
-					FVector StartTangent = ArcSpline->GetTangentAtSplinePoint( i, ESplineCoordinateSpace::Local );
-
-					FVector EndPos = TracePoints[i + 1];
-					FVector EndTangent = ArcSpline->GetTangentAtSplinePoint( i + 1, ESplineCoordinateSpace::Local );
-
-					USplineMeshComponent *SplineMeshComponent;
-						
-					if ( i >= SplineMeshes.Num() )
-					{
-						SplineMeshComponent = NewObject<USplineMeshComponent>( this, USplineMeshComponent::StaticClass() );
-						SplineMeshComponent->SetStaticMesh( BeamMesh );
-						SplineMeshComponent->SetMaterial( 0, BeamMaterial );
-						SplineMeshComponent->SetStartScale( FVector2D( 4, 4 ) );
-						SplineMeshComponent->SetEndScale( FVector2D( 4, 4 ) );
-						SplineMeshComponent->SetBoundaryMax( 1 );
-						SplineMeshes.Push( SplineMeshComponent );
-					}
-					SplineMeshComponent = SplineMeshes[i];
-
-					SplineMeshComponent->SetVisibility( true );
-					SplineMeshComponent->SetStartAndEnd( StartPos, StartTangent, EndPos, EndTangent );
-
-
-				}
-
-				// Hide any extra
-				for ( int i = TracePoints.Num() - 2; i < SplineMeshes.Num(); i++ )
-					SplineMeshes[i]->SetVisibility( false );
-
-				RegisterAllComponents();
-			}
-
-			
-		}
-
-		// If it changed, rumble.
-		if ( LastIsValidTeleportDestination != IsValidTeleportDestination )
-			RumbleController( 0.3 );
-		LastIsValidTeleportDestination = IsValidTeleportDestination;
-	}
-	
+	HandleTeleportationArc();
 }
 
 void AVRHand::ActivateTeleporter()
@@ -413,4 +312,138 @@ FRotator AVRHand::GetControllerRelativeRotation()
 	const FTransform RelativeTransform = CurrentTransform.GetRelativeTransform( InitialTransform );
 
 	return RelativeTransform.GetRotation().Rotator();
+}
+
+void AVRHand::HandleTeleportationArc()
+{
+	ClearArc();
+
+	if (IsTeleporterActive)
+	{
+		TArray<FVector> TracePoints;
+		FVector NavMeshLocation;
+		FVector TraceLocation;
+		bool IsValidTeleportDestination = TraceTeleportDestination(TracePoints, NavMeshLocation, TraceLocation);
+
+		TeleportCylinder->SetVisibility(IsValidTeleportDestination, true);
+
+		// Trace down to find a valid location for player to stand at (original NavMesh location is offset upwards, so we must find the actual floor)
+		FHitResult OutHit;
+		{
+			static const FName LineTraceSingleName(TEXT("TeleporterDrop"));
+			FCollisionQueryParams CollisionQueryParams(LineTraceSingleName, false, this);
+
+			FVector EndPos = NavMeshLocation + FVector(0, 0, -200); // Create downward vector
+			GetWorld()->LineTraceSingleByChannel(OutHit, NavMeshLocation, EndPos, ECC_WorldStatic, CollisionQueryParams);
+		}
+
+		FVector TeleportCylinderLocation;
+		if (OutHit.bBlockingHit)
+			TeleportCylinderLocation = OutHit.ImpactPoint;
+		else
+			TeleportCylinderLocation = NavMeshLocation;
+
+		TeleportCylinder->SetWorldLocation(TeleportCylinderLocation, false, nullptr, ETeleportType::TeleportPhysics);
+
+		// If it changed, rumble.
+		if (LastIsValidTeleportDestination != IsValidTeleportDestination)
+		{
+			RumbleController(0.3);
+		}
+
+		LastIsValidTeleportDestination = IsValidTeleportDestination;
+
+		UpdateArcSpline(IsValidTeleportDestination, TracePoints);
+
+		UpdateArcEndpoint(TraceLocation, IsValidTeleportDestination);
+	}
+}
+
+void AVRHand::ClearArc()
+{
+	ArcSpline->ClearSplinePoints();
+}
+
+void AVRHand::UpdateArcSpline(bool FoundValidLocation, TArray<FVector> SplinePoints)
+{
+	if (!FoundValidLocation)
+	{
+		auto StartPos = ArcDirection->K2_GetComponentLocation();
+		auto EndPos = StartPos + ArcDirection->GetForwardVector() * 20;
+
+		SplinePoints.Empty();
+		SplinePoints.Add(StartPos);
+		SplinePoints.Add(EndPos);
+	}
+
+	// Make Spline....
+	if (SplinePoints.Num() > 0)
+	{
+		for (FVector TracePoint : SplinePoints)
+		{
+			ArcSpline->AddSplinePoint(TracePoint, ESplineCoordinateSpace::Local, true);
+		}
+
+		ArcSpline->SetSplinePointType(SplinePoints.Num() - 1, ESplinePointType::CurveClamped, true);
+
+		for (int i = 0; i < SplinePoints.Num() - 1; i++)
+		{
+			FVector StartPos = SplinePoints[i];
+			FVector StartTangent = ArcSpline->GetTangentAtSplinePoint(i, ESplineCoordinateSpace::Local);
+
+			FVector EndPos = SplinePoints[i + 1];
+			FVector EndTangent = ArcSpline->GetTangentAtSplinePoint(i + 1, ESplineCoordinateSpace::Local);
+
+			USplineMeshComponent *SplineMeshComponent;
+
+			if (i < SplineMeshes.Num())
+			{
+				SplineMeshComponent = SplineMeshes[i];
+			}
+			else
+			{
+				SplineMeshComponent = NewObject<USplineMeshComponent>(this, USplineMeshComponent::StaticClass());
+				SplineMeshComponent->SetStaticMesh(BeamMesh);
+				SplineMeshComponent->SetMaterial(0, BeamMaterial);
+				SplineMeshComponent->SetStartScale(FVector2D(4, 4));
+				SplineMeshComponent->SetEndScale(FVector2D(4, 4));
+				SplineMeshComponent->SetBoundaryMax(1);
+				SplineMeshes.Push(SplineMeshComponent);
+			}
+
+			SplineMeshComponent->SetVisibility(true);
+			SplineMeshComponent->SetStartAndEnd(StartPos, StartTangent, EndPos, EndTangent);
+		}
+
+		// Hide any extra
+		for (int i = SplinePoints.Num() - 1; i < SplineMeshes.Num(); i++)
+		{
+			SplineMeshes[i]->SetVisibility(false);
+		}
+
+		RegisterAllComponents();
+	}
+}
+
+void AVRHand::UpdateArcEndpoint(FVector NewLocation, bool ValidLocationFound)
+{
+	ArcEndPoint->SetVisibility(ValidLocationFound && IsTeleporterActive, false);
+	ArcEndPoint->SetWorldLocation(NewLocation, false, nullptr, ETeleportType::TeleportPhysics);
+
+	FRotator ArrowRotator = TeleportRotator;
+
+	IHeadMountedDisplay *hmd = GEngine->HMDDevice.Get();
+	if (hmd)
+	{
+		FRotator DeviceRotation;
+		FVector DevicePosition;
+		UHeadMountedDisplayFunctionLibrary::GetOrientationAndPosition(DeviceRotation, DevicePosition);
+
+		DeviceRotation.Pitch = 0;
+		DeviceRotation.Roll = 0;
+
+		ArrowRotator = UKismetMathLibrary::ComposeRotators(TeleportRotator, DeviceRotation);
+	}
+
+	TeleportArrow->SetWorldRotation(ArrowRotator);
 }
