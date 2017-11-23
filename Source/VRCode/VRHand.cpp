@@ -27,7 +27,7 @@ AVRHand::AVRHand() :
 {
 
 
- 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
+	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
 	Hand = EControllerHand::Right;
@@ -43,7 +43,7 @@ AVRHand::AVRHand() :
 	HandMesh->SetupAttachment( MotionController );
 
 	GrabSphere = CreateDefaultSubobject<USphereComponent>( TEXT( "GrabSphere" ) );
-	GrabSphere->SetupAttachment( HandMesh ); 
+	GrabSphere->SetupAttachment( HandMesh );
 	GrabSphere->InitSphereRadius( 10.0f );
 	GrabSphere->OnComponentBeginOverlap.AddDynamic( this, &AVRHand::OnComponentBeginOverlap );
 
@@ -263,7 +263,7 @@ void AVRHand::Tick( float DeltaTime )
 			// Rotate Arrow
 			FRotator ArrowRotator = TeleportRotator;
 
- 			IHeadMountedDisplay *hmd = GEngine->HMDDevice.Get();
+			IHeadMountedDisplay *hmd = GEngine->HMDDevice.Get();
 			if ( hmd )
 			{
 				FRotator DeviceRotation;
@@ -277,8 +277,8 @@ void AVRHand::Tick( float DeltaTime )
 			}
 
 			TeleportArrow->SetWorldRotation( ArrowRotator );
+
 			
-			// Make Spline....
 			if ( TracePoints.Num() > 0 )
 			{
 				ArcSpline->ClearSplinePoints();
@@ -297,7 +297,7 @@ void AVRHand::Tick( float DeltaTime )
 					FVector EndTangent = ArcSpline->GetTangentAtSplinePoint( i + 1, ESplineCoordinateSpace::Local );
 
 					USplineMeshComponent *SplineMeshComponent;
-						
+
 					if ( i >= SplineMeshes.Num() )
 					{
 						SplineMeshComponent = NewObject<USplineMeshComponent>( this, USplineMeshComponent::StaticClass() );
@@ -323,7 +323,7 @@ void AVRHand::Tick( float DeltaTime )
 				RegisterAllComponents();
 			}
 
-			
+
 		}
 
 		// If it changed, rumble.
@@ -331,7 +331,7 @@ void AVRHand::Tick( float DeltaTime )
 			RumbleController( 0.3 );
 		LastIsValidTeleportDestination = IsValidTeleportDestination;
 	}
-	
+
 }
 
 void AVRHand::ActivateTeleporter()
@@ -351,7 +351,7 @@ void AVRHand::ActivateTeleporter()
 void AVRHand::DisableTeleporter()
 {
 	IsTeleporterActive = false;
-	
+
 	TeleportCylinder->SetVisibility( false, true );
 	ArcEndPoint->SetVisibility( false );
 
@@ -371,7 +371,7 @@ bool AVRHand::TraceTeleportDestination( TArray<FVector> &TracePoints, FVector &N
 	LaunchVelocity *= TeleportLaunchVelocity;
 
 	// Predict Projectile Path
-	
+
 	FPredictProjectilePathParams PredictParams( 0.0f, StartPos, LaunchVelocity, 4.0f, UEngineTypes::ConvertToObjectType( ECC_WorldStatic ) );
 	FPredictProjectilePathResult PredictResult;
 	const bool DidPredictPath = UGameplayStatics::PredictProjectilePath( GetWorld(), PredictParams, PredictResult );
@@ -379,9 +379,9 @@ bool AVRHand::TraceTeleportDestination( TArray<FVector> &TracePoints, FVector &N
 		return false;
 
 	// Getting Projected Endpoint
-	
+
 	FVector PointToProject = PredictResult.HitResult.Location;
-	FNavLocation ProjectedHitLocation; 
+	FNavLocation ProjectedHitLocation;
 	UNavigationSystem *NavSystem = GetWorld()->GetNavigationSystem();
 	const bool DidProjectToNav = NavSystem->ProjectPointToNavigation( PointToProject, ProjectedHitLocation, Extents );
 	if ( !DidProjectToNav )
@@ -394,7 +394,7 @@ bool AVRHand::TraceTeleportDestination( TArray<FVector> &TracePoints, FVector &N
 		TracePoints.Push( Point.Location );
 
 	TraceLocation = PredictResult.HitResult.Location;
-	NavMeshLocation = ProjectedHitLocation.Location;	
+	NavMeshLocation = ProjectedHitLocation.Location;
 
 	return true;
 }
