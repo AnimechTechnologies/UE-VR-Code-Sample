@@ -87,10 +87,24 @@ void AVRHand::OnConstruction(const FTransform & Transform)
 
 void AVRHand::RumbleController_Implementation( float intensity )
 {
-	FLatentActionInfo actionInfo;
-	actionInfo.CallbackTarget = this;
 	APlayerController *playerController = GetWorld()->GetFirstPlayerController();
-	playerController->PlayHapticEffect( HapticEffect, Hand, intensity, false );
+
+	if (HapticEffect == nullptr)
+	{
+		float duration = 0.04;
+		bool affectsLeftLarge = Hand == EControllerHand::Left;
+		bool affectsLeftSmall = Hand == EControllerHand::Left;
+		bool affectsRightLarge = Hand == EControllerHand::Right;
+		bool affectsRightSmall = Hand == EControllerHand::Right;
+		auto action = EDynamicForceFeedbackAction::Start;
+		FLatentActionInfo actionInfo;
+		actionInfo.CallbackTarget = this;
+
+		playerController->PlayDynamicForceFeedback(intensity, duration, affectsLeftLarge, affectsLeftSmall, affectsRightLarge, affectsRightSmall, action, actionInfo);
+		return;
+	}
+
+	playerController->PlayHapticEffect(HapticEffect, Hand, intensity, false);
 }
 
 void AVRHand::OnComponentBeginOverlap( UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult )
@@ -177,7 +191,7 @@ void AVRHand::UpdateAnimationGripState()
 		if ( WantsToGrip )
 			Grip = EGripState::Grab;
 
-		// If not holding something, the hand should open or close 
+		// If not holding something, the hand should open or close
 		// slightly when passing over an interactable object
 		AActor *actor = GetActorNearHand();
 		if ( actor )
