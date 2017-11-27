@@ -8,7 +8,7 @@
 
 #include "GameFramework/Actor.h"
 
-#include "VRHand.generated.h"
+#include "VRMotionController.generated.h"
 
 UENUM(BlueprintType)
 enum class EGripState : uint8
@@ -19,7 +19,7 @@ enum class EGripState : uint8
 };
 
 UCLASS()
-class VRCODE_API AVRHand : public AActor
+class VRCODE_API AVRMotionController : public AActor
 {
 	GENERATED_BODY()
 
@@ -94,7 +94,7 @@ public:
 	bool HasValidTeleportLocation;
 
 	// Sets default values for this actor's properties
-	AVRHand();
+	AVRMotionController();
 
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;

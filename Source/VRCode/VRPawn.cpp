@@ -6,7 +6,7 @@
 
 #include "VRCode.h"
 #include "VRPawn.h"
-#include "VRHand.h"
+#include "VRMotionController.h"
 #include "Runtime/HeadMountedDisplay/Public/IHeadMountedDisplay.h"
 
 // Sets default values
@@ -64,7 +64,7 @@ void AVRPawn::BeginPlay()
 
 }
 
-void AVRPawn::FinishTeleport( AVRHand *Current, const FVector &TeleportPosition, const FRotator &TeleportRotator )
+void AVRPawn::FinishTeleport( AVRMotionController *Current, const FVector &TeleportPosition, const FRotator &TeleportRotator )
 {
 	Current->DisableTeleporter();
 
@@ -79,7 +79,7 @@ void AVRPawn::FinishTeleport( AVRHand *Current, const FVector &TeleportPosition,
 	IsTeleporting = false;
 }
 
-void AVRPawn::ExecuteTeleport( AVRHand *Current )
+void AVRPawn::ExecuteTeleport(AVRMotionController *Current )
 {
 	if ( IsTeleporting )
 		return;
@@ -115,8 +115,8 @@ void AVRPawn::HandleButtonStyleTeleportActivation( UChildActorComponent *Hand, E
 	if ( ControlScheme == ETeleportControlScheme::StickOnly )
 		return;
 
-	AVRHand *Current = Cast<AVRHand>( Hand->GetChildActor() );
-	AVRHand *Other = Cast<AVRHand>( ( Hand == LeftHand ? RightHand : LeftHand )->GetChildActor() );
+	AVRMotionController *Current = Cast<AVRMotionController>( Hand->GetChildActor() );
+	AVRMotionController *Other = Cast<AVRMotionController>( ( Hand == LeftHand ? RightHand : LeftHand )->GetChildActor() );
 
 	if ( KeyEvent == IE_Pressed )
 	{
@@ -132,7 +132,7 @@ void AVRPawn::HandleButtonStyleTeleportActivation( UChildActorComponent *Hand, E
 	}
 }
 
-void AVRPawn::HandleStickInputStyleTeleportActivation( FVector2D AxisInput, AVRHand *Current, AVRHand *Other )
+void AVRPawn::HandleStickInputStyleTeleportActivation( FVector2D AxisInput, AVRMotionController *Current, AVRMotionController *Other )
 {
 	if ( ControlScheme != ETeleportControlScheme::StickOnly )
 		return;
@@ -152,7 +152,7 @@ void AVRPawn::HandleStickInputStyleTeleportActivation( FVector2D AxisInput, AVRH
 	}
 }
 
-bool AVRPawn::GetRotationFromInput( AVRHand *Current, FVector2D AxisInput, FRotator &OrientRotator )
+bool AVRPawn::GetRotationFromInput(AVRMotionController *Current, FVector2D AxisInput, FRotator &OrientRotator )
 {
 	FRotator ActorRotator = GetActorRotation();
 	ActorRotator.Roll = 0;
@@ -191,13 +191,13 @@ void AVRPawn::Tick( float DeltaTime )
 
 	if ( InputComponent )
 	{
-		AVRHand *Left = Cast<AVRHand>( LeftHand->GetChildActor() );
+		AVRMotionController *Left = Cast<AVRMotionController>( LeftHand->GetChildActor() );
 		FVector2D ThumbLeft(
 			InputComponent->GetAxisValue( TEXT( "ThumbLeft_Fwd" ) ),
 			InputComponent->GetAxisValue( TEXT( "ThumbLeft_Side" ) )
 		);
 
-		AVRHand *Right = Cast<AVRHand>( RightHand->GetChildActor() );
+		AVRMotionController *Right = Cast<AVRMotionController>( RightHand->GetChildActor() );
 		FVector2D ThumbRight(
 			InputComponent->GetAxisValue( TEXT( "ThumbRight_Fwd" ) ),
 			InputComponent->GetAxisValue( TEXT( "ThumbRight_Side" ) )
@@ -231,7 +231,7 @@ void AVRPawn::Tick( float DeltaTime )
 
 void AVRPawn::HandleGrip( UChildActorComponent *Hand, EInputEvent KeyEvent )
 {
-	AVRHand *Current = Cast<AVRHand>( Hand->GetChildActor() );
+	AVRMotionController *Current = Cast<AVRMotionController>( Hand->GetChildActor() );
 	if ( Current )
 	{
 		if ( KeyEvent == IE_Pressed )
