@@ -5,12 +5,12 @@
 */
 
 #include "VRCode.h"
-#include "VRPawn.h"
+#include "VRMotionControllerPawn.h"
 #include "VRMotionController.h"
 #include "Runtime/HeadMountedDisplay/Public/IHeadMountedDisplay.h"
 
 // Sets default values
-AVRPawn::AVRPawn()
+AVRMotionControllerPawn::AVRMotionControllerPawn()
 {
 	// Set this pawn to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
@@ -31,7 +31,7 @@ AVRPawn::AVRPawn()
 }
 
 // Called when the game starts or when spawned
-void AVRPawn::BeginPlay()
+void AVRMotionControllerPawn::BeginPlay()
 {
 	Super::BeginPlay();
 
@@ -64,7 +64,7 @@ void AVRPawn::BeginPlay()
 
 }
 
-void AVRPawn::FinishTeleport( AVRMotionController *Current, const FVector &TeleportPosition, const FRotator &TeleportRotator )
+void AVRMotionControllerPawn::FinishTeleport( AVRMotionController *Current, const FVector &TeleportPosition, const FRotator &TeleportRotator )
 {
 	Current->DisableTeleporter();
 
@@ -79,7 +79,7 @@ void AVRPawn::FinishTeleport( AVRMotionController *Current, const FVector &Telep
 	IsTeleporting = false;
 }
 
-void AVRPawn::ExecuteTeleport(AVRMotionController *Current )
+void AVRMotionControllerPawn::ExecuteTeleport(AVRMotionController *Current )
 {
 	if ( IsTeleporting )
 		return;
@@ -110,7 +110,7 @@ void AVRPawn::ExecuteTeleport(AVRMotionController *Current )
 }
 
 
-void AVRPawn::HandleButtonStyleTeleportActivation( UChildActorComponent *Hand, EInputEvent KeyEvent )
+void AVRMotionControllerPawn::HandleButtonStyleTeleportActivation( UChildActorComponent *Hand, EInputEvent KeyEvent )
 {
 	if ( ControlScheme == ETeleportControlScheme::StickOnly )
 		return;
@@ -132,7 +132,7 @@ void AVRPawn::HandleButtonStyleTeleportActivation( UChildActorComponent *Hand, E
 	}
 }
 
-void AVRPawn::HandleStickInputStyleTeleportActivation( FVector2D AxisInput, AVRMotionController *Current, AVRMotionController *Other )
+void AVRMotionControllerPawn::HandleStickInputStyleTeleportActivation( FVector2D AxisInput, AVRMotionController *Current, AVRMotionController *Other )
 {
 	if ( ControlScheme != ETeleportControlScheme::StickOnly )
 		return;
@@ -152,7 +152,7 @@ void AVRPawn::HandleStickInputStyleTeleportActivation( FVector2D AxisInput, AVRM
 	}
 }
 
-bool AVRPawn::GetRotationFromInput(AVRMotionController *Current, FVector2D AxisInput, FRotator &OrientRotator )
+bool AVRMotionControllerPawn::GetRotationFromInput(AVRMotionController *Current, FVector2D AxisInput, FRotator &OrientRotator )
 {
 	FRotator ActorRotator = GetActorRotation();
 	ActorRotator.Roll = 0;
@@ -185,7 +185,7 @@ bool AVRPawn::GetRotationFromInput(AVRMotionController *Current, FVector2D AxisI
 }
 
 // Called every frame
-void AVRPawn::Tick( float DeltaTime )
+void AVRMotionControllerPawn::Tick( float DeltaTime )
 {
 	Super::Tick( DeltaTime );
 
@@ -229,7 +229,7 @@ void AVRPawn::Tick( float DeltaTime )
 
 }
 
-void AVRPawn::HandleGrip( UChildActorComponent *Hand, EInputEvent KeyEvent )
+void AVRMotionControllerPawn::HandleGrip( UChildActorComponent *Hand, EInputEvent KeyEvent )
 {
 	AVRMotionController *Current = Cast<AVRMotionController>( Hand->GetChildActor() );
 	if ( Current )
@@ -241,7 +241,7 @@ void AVRPawn::HandleGrip( UChildActorComponent *Hand, EInputEvent KeyEvent )
 	}
 }
 
-void AVRPawn::BindInputActionUFunction( class UInputComponent* PlayerInputComponent, FName ActionName, EInputEvent KeyEvent, FName FuncName, UChildActorComponent *Hand )
+void AVRMotionControllerPawn::BindInputActionUFunction( class UInputComponent* PlayerInputComponent, FName ActionName, EInputEvent KeyEvent, FName FuncName, UChildActorComponent *Hand )
 {
 	FInputActionBinding InputActionBinding( ActionName, KeyEvent );
 
@@ -253,7 +253,7 @@ void AVRPawn::BindInputActionUFunction( class UInputComponent* PlayerInputCompon
 }
 
 // Called to bind functionality to input
-void AVRPawn::SetupPlayerInputComponent( class UInputComponent* PlayerInputComponent )
+void AVRMotionControllerPawn::SetupPlayerInputComponent( class UInputComponent* PlayerInputComponent )
 {
 	Super::SetupPlayerInputComponent( PlayerInputComponent );
 

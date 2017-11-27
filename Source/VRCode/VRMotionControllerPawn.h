@@ -8,7 +8,7 @@
 
 #include "GameFramework/Pawn.h"
 
-#include "VRPawn.generated.h"
+#include "VRMotionControllerPawn.generated.h"
 
 UENUM( BlueprintType )
 enum class ETeleportControlScheme : uint8
@@ -20,7 +20,7 @@ enum class ETeleportControlScheme : uint8
 };
 
 UCLASS()
-class VRCODE_API AVRPawn : public APawn
+class VRCODE_API AVRMotionControllerPawn : public APawn
 {
 	GENERATED_BODY()
 
@@ -63,7 +63,7 @@ public:
 	bool IsTeleporting;
 
 	// Sets default values for this pawn's properties
-	AVRPawn();
+	AVRMotionControllerPawn();
 
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
