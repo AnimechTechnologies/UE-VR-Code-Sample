@@ -7,17 +7,17 @@
 #pragma once
 
 #include "GameFramework/GameModeBase.h"
-#include "VRCodeGameModeBase.generated.h"
+#include "VRGameMode.generated.h"
 
 /**
- * 
+ *
  */
 UCLASS()
 class VRCODE_API AVRCodeGameModeBase : public AGameModeBase
 {
 	GENERATED_BODY()
-	
-	
-	
-	
+
+
+
+
 };

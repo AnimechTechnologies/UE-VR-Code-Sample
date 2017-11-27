@@ -5,7 +5,7 @@
 */
 
 #include "VRCode.h"
-#include "VRCodeGameModeBase.h"
+#include "VRGameMode.h"
 
 
 
