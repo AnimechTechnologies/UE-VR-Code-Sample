@@ -167,8 +167,8 @@ AActor* AVRMotionController::GetActorNearHand()
 
 	// 	if ( GEngine && Hand == EControllerHand::Right )
 // 		GEngine->AddOnScreenDebugMessage( -1, 0.16f, FColor::Red,
-// 			FString::Printf( TEXT( "Actors near right hand %d, found pickupable: %d, %s" ), 
-// 			overlappingActors.Num(), 
+// 			FString::Printf( TEXT( "Actors near right hand %d, found pickupable: %d, %s" ),
+// 			overlappingActors.Num(),
 // 			count,
 // 			nearest ? TEXT( "TRUE" ) : TEXT( "FALSE" ) ) );
 
@@ -342,7 +342,7 @@ FRotator AVRMotionController::GetControllerRelativeRotation()
 	return RelativeTransform.GetRotation().Rotator();
 }
 
-void AVRHand::SetupRoomScaleOutline()
+void AVRMotionController::SetupRoomScaleOutline()
 {
 	auto Vertices = SteamVRChaperone->GetBounds();
 	auto Normal = FVector(0.0f, 0.0f, 1.0f);
@@ -366,7 +366,7 @@ void AVRHand::SetupRoomScaleOutline()
 	RoomScaleMesh->SetRelativeRotation(RectRotation);
 }
 
-void AVRHand::UpdateRoomScaleOutline()
+void AVRMotionController::UpdateRoomScaleOutline()
 {
 	if (RoomScaleMesh->IsVisible())
 	{
@@ -387,7 +387,7 @@ void AVRHand::UpdateRoomScaleOutline()
 	}
 }
 
-void AVRHand::HandleTeleportationArc()
+void AVRMotionController::HandleTeleportationArc()
 {
 	ClearArc();
 
@@ -432,12 +432,12 @@ void AVRHand::HandleTeleportationArc()
 	}
 }
 
-void AVRHand::ClearArc()
+void AVRMotionController::ClearArc()
 {
 	ArcSpline->ClearSplinePoints();
 }
 
-void AVRHand::UpdateArcSpline(bool FoundValidLocation, TArray<FVector> SplinePoints)
+void AVRMotionController::UpdateArcSpline(bool FoundValidLocation, TArray<FVector> SplinePoints)
 {
 	if (!FoundValidLocation)
 	{
@@ -498,7 +498,7 @@ void AVRHand::UpdateArcSpline(bool FoundValidLocation, TArray<FVector> SplinePoi
 	}
 }
 
-void AVRHand::UpdateArcEndpoint(FVector NewLocation, bool ValidLocationFound)
+void AVRMotionController::UpdateArcEndpoint(FVector NewLocation, bool ValidLocationFound)
 {
 	ArcEndPoint->SetVisibility(ValidLocationFound && IsTeleporterActive, false);
 	ArcEndPoint->SetWorldLocation(NewLocation, false, nullptr, ETeleportType::TeleportPhysics);
