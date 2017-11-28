@@ -8,7 +8,7 @@
 
 #include "GameFramework/Pawn.h"
 
-#include "VRPawn.generated.h"
+#include "VRMotionControllerPawn.generated.h"
 
 UENUM( BlueprintType )
 enum class ETeleportControlScheme : uint8
@@ -20,7 +20,7 @@ enum class ETeleportControlScheme : uint8
 };
 
 UCLASS()
-class VRCODE_API AVRPawn : public APawn
+class VRCODE_API AVRMotionControllerPawn : public APawn
 {
 	GENERATED_BODY()
 
@@ -36,8 +36,8 @@ class VRCODE_API AVRPawn : public APawn
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Code Components", meta = (AllowPrivateAccess = "true"))
 	class UChildActorComponent *RightHand;
 
-	void HandleStickInputStyleTeleportActivation( FVector2D AxisInput, class AVRHand *Current, class AVRHand *Other );
-	bool GetRotationFromInput( class AVRHand *Current, FVector2D AxisInput, FRotator &OrientRotator );
+	void HandleStickInputStyleTeleportActivation( FVector2D AxisInput, class AVRMotionController *Current, class AVRMotionController *Other );
+	bool GetRotationFromInput( class AVRMotionController *Current, FVector2D AxisInput, FRotator &OrientRotator );
 
 public:
 
@@ -63,7 +63,7 @@ public:
 	bool IsTeleporting;
 
 	// Sets default values for this pawn's properties
-	AVRPawn();
+	AVRMotionControllerPawn();
 
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -83,9 +83,9 @@ public:
 	void BindInputActionUFunction( class UInputComponent* PlayerInputComponent, FName ActionName, EInputEvent KeyEvent, FName FuncName, class UChildActorComponent *Hand );
 
 	UFUNCTION()
-	void FinishTeleport( class AVRHand *Current, const FVector &TeleportPosition, const FRotator &TeleportRotator );
+	void FinishTeleport( class AVRMotionController *Current, const FVector &TeleportPosition, const FRotator &TeleportRotator );
 
-	void ExecuteTeleport( class AVRHand *Current );
+	void ExecuteTeleport( class AVRMotionController *Current );
 
 
 

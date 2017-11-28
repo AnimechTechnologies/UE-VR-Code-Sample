@@ -11,7 +11,7 @@
  */
 
 #include "VRCode.h"
-#include "VRHand.h"
+#include "VRMotionController.h"
 #include "IPickupable.h"
 #include "Runtime/HeadMountedDisplay/Public/MotionControllerComponent.h"
 #include "Runtime/Engine/Classes/Components/SplineComponent.h"
@@ -22,7 +22,7 @@
 #include "SteamVRChaperoneComponent.h"
 
 // Sets default values
-AVRHand::AVRHand() :
+AVRMotionController::AVRMotionController() :
 	Extents( 500, 500, 500 )
 {
 
@@ -45,7 +45,7 @@ AVRHand::AVRHand() :
 	GrabSphere = CreateDefaultSubobject<USphereComponent>( TEXT( "GrabSphere" ) );
 	GrabSphere->SetupAttachment( HandMesh );
 	GrabSphere->InitSphereRadius( 10.0f );
-	GrabSphere->OnComponentBeginOverlap.AddDynamic( this, &AVRHand::OnComponentBeginOverlap );
+	GrabSphere->OnComponentBeginOverlap.AddDynamic( this, &AVRMotionController::OnComponentBeginOverlap );
 
 	ArcDirection = CreateDefaultSubobject<UArrowComponent>( TEXT( "ArcDirection" ) );
 	ArcDirection->SetupAttachment( HandMesh );
@@ -73,7 +73,7 @@ AVRHand::AVRHand() :
 
 }
 
-void AVRHand::OnConstruction(const FTransform & Transform)
+void AVRMotionController::OnConstruction(const FTransform & Transform)
 {
 	Super::OnConstruction(Transform);
 
@@ -85,7 +85,7 @@ void AVRHand::OnConstruction(const FTransform & Transform)
 
 }
 
-void AVRHand::RumbleController_Implementation( float intensity )
+void AVRMotionController::RumbleController_Implementation( float intensity )
 {
 	APlayerController *playerController = GetWorld()->GetFirstPlayerController();
 
@@ -107,7 +107,7 @@ void AVRHand::RumbleController_Implementation( float intensity )
 	playerController->PlayHapticEffect(HapticEffect, Hand, intensity, false);
 }
 
-void AVRHand::OnComponentBeginOverlap( UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult )
+void AVRMotionController::OnComponentBeginOverlap( UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult )
 {
 	Grip = EGripState::CanGrab;
 	if ( ( OtherComp != nullptr ) && ( OtherComp != GrabSphere ) )
@@ -121,7 +121,7 @@ void AVRHand::OnComponentBeginOverlap( UPrimitiveComponent* OverlappedComp, AAct
 }
 
 // Called when the game starts or when spawned
-void AVRHand::BeginPlay()
+void AVRMotionController::BeginPlay()
 {
 	Super::BeginPlay();
 
@@ -139,7 +139,7 @@ void AVRHand::BeginPlay()
 	TeleportCylinder->SetVisibility( false, true );
 }
 
-AActor* AVRHand::GetActorNearHand()
+AActor* AVRMotionController::GetActorNearHand()
 {
 	TArray<AActor*> overlappingActors;
 
@@ -175,7 +175,7 @@ AActor* AVRHand::GetActorNearHand()
 	return nearest;
 }
 
-void AVRHand::UpdateAnimationGripState()
+void AVRMotionController::UpdateAnimationGripState()
 {
 	// Default to Open
 	Grip = EGripState::Open;
@@ -205,7 +205,7 @@ void AVRHand::UpdateAnimationGripState()
 		HandMesh->SetCollisionEnabled( ECollisionEnabled::NoCollision );
 }
 
-void AVRHand::GrabActor_Implementation()
+void AVRMotionController::GrabActor_Implementation()
 {
 	WantsToGrip = true;
 
@@ -219,7 +219,7 @@ void AVRHand::GrabActor_Implementation()
 
 }
 
-void AVRHand::ReleaseActor_Implementation()
+void AVRMotionController::ReleaseActor_Implementation()
 {
 	WantsToGrip = false;
 
@@ -238,7 +238,7 @@ void AVRHand::ReleaseActor_Implementation()
 }
 
 // Called every frame
-void AVRHand::Tick( float DeltaTime )
+void AVRMotionController::Tick( float DeltaTime )
 {
 	Super::Tick( DeltaTime );
 
@@ -249,7 +249,7 @@ void AVRHand::Tick( float DeltaTime )
 	HandleTeleportationArc();
 }
 
-void AVRHand::ActivateTeleporter()
+void AVRMotionController::ActivateTeleporter()
 {
 //	if ( GEngine ) GEngine->AddOnScreenDebugMessage( -1, 0.16f, FColor::White, FString::Printf( TEXT( "Activating Teleporter " ) ) );
 	IsTeleporterActive = true;
@@ -263,7 +263,7 @@ void AVRHand::ActivateTeleporter()
 }
 
 
-void AVRHand::DisableTeleporter()
+void AVRMotionController::DisableTeleporter()
 {
 	IsTeleporterActive = false;
 
@@ -277,7 +277,7 @@ void AVRHand::DisableTeleporter()
 	// TODO: Roomscale Mesh
 }
 
-bool AVRHand::TraceTeleportDestination( TArray<FVector> &TracePoints, FVector &NavMeshLocation, FVector &TraceLocation )
+bool AVRMotionController::TraceTeleportDestination( TArray<FVector> &TracePoints, FVector &NavMeshLocation, FVector &TraceLocation )
 {
 
 	FVector StartPos = ArcDirection->GetComponentLocation();
@@ -315,7 +315,7 @@ bool AVRHand::TraceTeleportDestination( TArray<FVector> &TracePoints, FVector &N
 }
 
 
-void AVRHand::GetTeleportDestination( FVector &OutPosition, FRotator &OutRotator )
+void AVRMotionController::GetTeleportDestination( FVector &OutPosition, FRotator &OutRotator )
 {
 	IHeadMountedDisplay *hmd = GEngine->HMDDevice.Get();
 	FVector DevicePosition(ForceInitToZero);
@@ -333,7 +333,7 @@ void AVRHand::GetTeleportDestination( FVector &OutPosition, FRotator &OutRotator
 	OutRotator = TeleportRotator;
 }
 
-FRotator AVRHand::GetControllerRelativeRotation()
+FRotator AVRMotionController::GetControllerRelativeRotation()
 {
 	const FTransform InitialTransform( InitialControllerRotation );
 	const FTransform CurrentTransform = MotionController->GetComponentTransform();
